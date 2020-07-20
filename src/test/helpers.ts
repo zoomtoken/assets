@@ -89,7 +89,21 @@ export const getChainBlacklist = (chain: string): string[] => {
 }
 export const getRootDirFilesList = (): string[] => readDirSync(root)
 
-export const readDirSync = (path: string): string[] => fs.readdirSync(path)
+//export const readDirSync = (path: string): string[] => fs.readdirSync(path)
+export function readDirSync(path: string): string[] {
+    if (path === ".") {
+        let diff = getChangedFiles(path)
+        //fs.readdirSync(path).forEach(e => console.log(e))
+        //return fs.readdirSync(path).filter(function(file) { return diff.indexOf(file) > -1 })
+        return diff
+        //return []
+    } else {
+        let diff = getChangedFiles(path)
+        //return fs.readdirSync(path)
+        return diff
+    }
+}
+
 export const makeDirSync = (path: string) => fs.mkdirSync(path)
 export const isPathExistsSync = (path: string): boolean => fs.existsSync(path)
 export const isDirContainLogo = (path: string): boolean => fs.existsSync(`${path}/${logo}`)
@@ -238,9 +252,36 @@ export function getMoveCommandFromTo(oldName: string, newName: string): string {
     return `git mv ${oldName} ${newName}-temp && git mv ${newName}-temp ${newName}`
 }
 
+export function execCommand(command: string, cwd: string): string {
+    console.log(`Running command ${command} in ${cwd}`)
+    let output = execSync(command, {encoding: "utf-8", cwd: cwd})
+    console.log(`Command output: ${output}`)
+    return output
+}
+
 export function execRename(path: string, command: string) {
-    console.log(`Running command ${command}`)
-    execSync(command, {encoding: "utf-8", cwd: path})
+    execCommand(command, path)
+}
+
+export function getChangedFiles(path: string): string[] {
+    let rawDiff: string = ""
+    if (path === ".") {
+        rawDiff = execCommand("git diff --name-only", path)
+    } else {
+        rawDiff = execCommand(`git diff --name-only --relative ${path}`, path)
+    }
+    if (rawDiff.length == 0) {
+        return []
+    }
+    console.log(rawDiff.split("\n").length, rawDiff.split("\n")[0].length)
+    return rawDiff.split("\n")
+        .map(line => line.split("/")[0])
+        .filter(function (value, index, self) { return self.indexOf(value) === index })
+}
+
+export function getChangedFilesRec(path: string): string[] {
+    let rawDiff = execCommand("git diff --name-only", path)
+    return rawDiff.split("\n")
 }
 
 export const isValidatorHasAllKeys = (val: ValidatorModel): boolean => {
