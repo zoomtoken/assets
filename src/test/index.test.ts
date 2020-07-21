@@ -105,10 +105,6 @@ describe(`Test "blockchains" folder`, () => {
 
                     const checksum = isChecksum(address)
                     expect(checksum, `Expect asset at path ${assetPath} in checksum`).toBe(true)
-                    
-
-                    const [isInfoOK, InfoMsg] = isAssetInfoOK(chain, address)
-                    expect(isInfoOK, InfoMsg).toBe(true)
                 })
             })
             test(`Test chain ${chain} folder, images (${assetsList.length})`, () => {
